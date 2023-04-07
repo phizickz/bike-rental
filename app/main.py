@@ -26,5 +26,3 @@ def fillInventory(numberOfBikes: int):
 if __name__ == '__main__':
     inventory = Inventory()
     fillInventory(30)
-    # for bike in inventory.getAllBikes():
-    #     print(bike)
