@@ -22,7 +22,7 @@ def fillInventory(numberOfBikes: int):
             model=tempModel,
             price=choice(prices),
             year=tempYear,
-            sn=f'{models[tempModel]}-{tempYear}'
+            sn=f'{models[tempModel]}-{tempYear}-{b}'
         )
         client.addBike(tempBike)
 
