@@ -7,11 +7,8 @@ from dotenv import load_dotenv
 from modules.postgresclient import pgclient
 
 def fillInventory(numberOfBikes: int):
-    models = {
-        "Merida": "mi",
-        "DBS": "db",
-        "Samsung": "ss"
-    }
+    models = {'Kingdom': 'KNG', 'Sprinter': 'SPR', 'Trailster': 'TRS', 'Flamingo': 'FLM', 'Phoenix': 'PHX', 'Firestorm': 'FST', 'Viper': 'VIP', 'Cobblestone': 'CBL', 'Thunder': 'THR', 'Sniper': 'SNP'}
+
     year = []
     prices = []
     for y in range(1980, 2020, 2):
@@ -50,7 +47,7 @@ if __name__ == '__main__':
     load_dotenv()
     client = pgclient()
     if os.getenv("PY_ENV") == "dev":
-        fillInventory(1000)
-        generateCustomers(400)
+        fillInventory(500)
+        generateCustomers(200)
 
         # print(f"{client.getBikeAmount()} bikes and {client.getCustomerAmount()} customers in dev-database.")
