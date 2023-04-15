@@ -3,6 +3,7 @@ import os
 import psycopg2
 from modules.bike import Bike
 from modules.customer import Customer
+from modules.rental import Rental
 
 class pgclient:
     def __init__(self):
@@ -24,12 +25,11 @@ class pgclient:
     def __del__(self):
         self.__client.close()
 
-    def getAllTables(self):
-        res = self.executeSQL("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")
-        print(res)
 
     def addBike(self, value: Bike):
-        res = self.executeSQL(f"INSERT INTO bike (model,year,price,serialnr,isRented) VAlUES('{value.model}','{value.year}','{value.price}','{value.sn}','{value.isRented}') RETURNING id;")
+        res = self.executeSQL(f"INSERT INTO bike (model,year,price,serialnr,isRented) "
+                              f"VAlUES('{value.model}','{value.year}','{value.price}','{value.sn}','{value.isRented}') "
+                              f"RETURNING id;")
         value.id = res[0][0]
 
     def isPhoneNumberTaken(self, value):
@@ -40,27 +40,59 @@ class pgclient:
 
     def addCustomer(self, value: Customer):
         if self.isPhoneNumberTaken(value):
-            print("Phone number already in use.")
+            # print("Phone number already in use.")
             return
 
-        res = self.executeSQL(f"INSERT INTO customer (name,age,phonenumber) VAlUES('{value.name}','{value.age}','{value.phonenumber}') RETURNING id;")
+        res = self.executeSQL(f"INSERT INTO customer (name,age,phonenumber) "
+                              f"VAlUES('{value.name}','{value.age}','{value.phonenumber}') "
+                              f"RETURNING id;")
         value.id = res[0][0]
 
-    def getAllBikes(self):
-        return self.executeSQL(f"SELECT * FROM bike")
+    def getRandomBikeID(self, amount=1, isRented=False) -> list:
+        res = self.executeSQL(f"SELECT id FROM bike WHERE isRented={isRented} ORDER BY RANDOM() LIMIT {amount};")
+        return res
 
-    def getBikeAmount(self):
-        res = self.executeSQL(f"SELECT * FROM bike")
-        return len(res)
-    def getCustomerAmount(self):
-        res = self.executeSQL(f"SELECT * FROM customer")
-        return len(res)
+    def getRandomCustomerID(self, value=1) -> list:
+        res = self.executeSQL(f"SELECT id FROM customer ORDER BY RANDOM() LIMIT {value};")
+        return res
 
-    def getAllCustomers(self):
-        return self.executeSQL(f"SELECT * FROM customer")
+    def rentBike(self, value: Rental):
+        res = self.executeSQL(f"INSERT INTO rentals(start_date,stop_date,customer_id,bike_id) "
+                              f"VALUES('{value.startdate}','{value.stopdate}','{value.customerid}','{value.bikeid}')"
+                              f"RETURNING id;")
+        if len(res) < 1:
+            raise Exception("Something went wrong at rentBike.")
+
+        value.bike.isRented = True
+        res = self.executeSQL(f"UPDATE bike SET isRented = {value.bike.isRented} "
+                              f"WHERE id = {value.bike.id};")
+
+    def getRentals(self):
+        res = self.executeSQL("select * from rentals")
+        return res.fetchall()
 
     def executeSQL(self, sqlstring):
-        with self.__client as conn:
-            with conn.cursor() as curs:
-                curs.execute(sqlstring)
-                return curs.fetchall()
+        try:
+            with self.__client as conn:
+                with conn.cursor() as curs:
+                    curs.execute(sqlstring)
+                    return curs.fetchall()
+        except Exception as e:
+            print(e)
+    # def getAllTables(self):
+    #     res = self.executeSQL("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")
+    #     print(res)
+    # def getAllBikes(self):
+    #     return self.executeSQL(f"SELECT * FROM bike")
+    #
+    # def getBikeAmount(self):
+    #     res = self.executeSQL(f"SELECT * FROM bike")
+    #     return len(res)
+    # def getCustomerAmount(self):
+    #     res = self.executeSQL(f"SELECT * FROM customer")
+    #     return len(res)
+    #
+    # def getAllCustomers(self):
+    #     return self.executeSQL(f"SELECT * FROM customer")
+
+

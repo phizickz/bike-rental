@@ -1,12 +1,14 @@
 import os
+import random
 
 from modules.bike import Bike
 from modules.customer import Customer
+from modules.rental import Rental
 from random import choice
 from dotenv import load_dotenv
 from modules.postgresclient import pgclient
 
-def fillInventory(numberOfBikes: int):
+def generateBikes(numberOfBikes: int):
     models = {'Kingdom': 'KNG', 'Sprinter': 'SPR', 'Trailster': 'TRS', 'Flamingo': 'FLM', 'Phoenix': 'PHX', 'Firestorm': 'FST', 'Viper': 'VIP', 'Cobblestone': 'CBL', 'Thunder': 'THR', 'Sniper': 'SNP'}
 
     year = []
@@ -43,11 +45,30 @@ def generateCustomers(numberOfCustomers: int):
         )
         client.addCustomer(tempCustomer)
 
+def generateRentals(numberofRentals: int):
+    for r in range(numberofRentals):
+        randbike = client.getRandomBikeID(random.randint(1,3))
+        randcustomer = client.getRandomCustomerID()
+        for b in randbike:
+            client.rentBike(
+                Rental(
+                    bikeid=b[0],
+                    customerid=randcustomer[0][0]
+                )
+            )
+
 if __name__ == '__main__':
     load_dotenv()
     client = pgclient()
     if os.getenv("PY_ENV") == "dev":
-        fillInventory(500)
-        generateCustomers(200)
+        generateBikes(100)
+        generateCustomers(50)
+        generateRentals(10)
+        rentals = client.getRentals()
+        for r in rentals:
+            print(r)
+        # create 20 fictional rentals
+        # end half of rentals
+        # list out current rentals
+        # list out rentalhistory
 
-        # print(f"{client.getBikeAmount()} bikes and {client.getCustomerAmount()} customers in dev-database.")

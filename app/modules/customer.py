@@ -6,6 +6,8 @@ class Customer:
         self._name = name
         self._age = age
         self._phonenumber = phonenumber
+        self._id = -1
+
 
     @property
     def name(self):
@@ -30,3 +32,13 @@ class Customer:
     @phonenumber.setter
     def phonenumber(self, value):
         self._phonenumber = value
+
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        if value < 0:
+            return
+        self._id = value

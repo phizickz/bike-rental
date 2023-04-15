@@ -29,15 +29,10 @@ data:
       CREATE TABLE rentals(
           id SERIAL PRIMARY KEY,
           start_date DATE NOT NULL,
+          stop_date DATE NOT NULL,
+          isActive BOOLEAN NOT NULL,
           customer_id INT REFERENCES customer(id),
           bike_id INT REFERENCES bike(id)
-      );
-      CREATE TABLE rentalhistory(
-        id SERIAL PRIMARY KEY,
-        start_date DATE NOT NULL,
-        stop_date DATE NOT NULL,
-        customer_id INT REFERENCES customer(id),
-        bike_id INT REFERENCES bike(id)
       );
     EOSQL
 ---
