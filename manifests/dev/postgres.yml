@@ -1,28 +1,79 @@
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bike-rental-db-init
+data:
+  bike-rental.sh: |
+    #!/bin/bash
+    set -e
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+      CREATE USER bikerental WITH PASSWORD 'bikerental123';
+      CREATE DATABASE bikerental;
+      ALTER DATABASE bikerental OWNER TO bikerental;
+    EOSQL
+    psql -v ON_ERROR_STOP=1 --username "bikerental" --dbname "bikerental" <<-EOSQL
+      CREATE TABLE bike (
+          id SERIAL PRIMARY KEY,
+          model varchar(255) NOT NULL,
+          year INT,
+          price varchar(255),
+          serialnr varchar(255) NOT NULL,
+          isRented BOOLEAN NOT NULL
+      );
+      CREATE TABLE customer(
+        id SERIAL PRIMARY KEY,
+        name varchar(255) NOT NULL,
+        age INT,
+        phonenumber INT
+      );
+      CREATE TABLE rentals(
+          id SERIAL PRIMARY KEY,
+          start_date DATE NOT NULL,
+          customer_id INT REFERENCES customer(id),
+          bike_id INT REFERENCES bike(id)
+      );
+      CREATE TABLE rentalhistory(
+        id SERIAL PRIMARY KEY,
+        start_date DATE NOT NULL,
+        stop_date DATE NOT NULL,
+        customer_id INT REFERENCES customer(id),
+        bike_id INT REFERENCES bike(id)
+      );
+    EOSQL
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: postgres
 spec:
   type: NodePort
   selector:
-    app.kubernetes.io/name: postgres
+    app: dev-postgres
   ports:
-    - targetPort: db-in
-      nodePort: 31433
+    - port: 5432
+      targetPort: db-in
+      nodePort: 30002
 ---
 apiVersion: v1
 kind: Pod
 metadata:
   name: postgres
+  labels:
+    app: dev-postgres
 spec:
   containers:
   - name: postgres
     image: postgres
     ports:
       - name: db-in
-        containerPort: 1433
+        containerPort: 5432
     env:
-      - name: POSTGRES_USER
-        value: svc-bikerental
       - name: POSTGRES_PASSWORD
-        value: bikeadmin123
+        value: admin123
+    volumeMounts:
+      - name: script
+        mountPath: "/docker-entrypoint-initdb.d"
+  volumes:
+    - name: script
+      configMap:
+        name: bike-rental-db-init

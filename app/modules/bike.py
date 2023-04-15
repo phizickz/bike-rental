@@ -2,39 +2,50 @@
 ## Rentalstate
 
 class Bike:
-    def __init__(self, model, sn, year, price, id):
-        self.__model: str = model
-        self.__year: int = year
-        self.__price = price
-        self.__sn: str = sn
-        self.__isRented: bool = False
-        self.__id = id
+    def __init__(self, model, sn, year, price):
+        self._model: str = model
+        self._year: int = year
+        self._price = price
+        self._serialnr: str = sn
+        self._isRented: bool = False
+        self._id = -1
 
-    def __str__(self):
-        return f'Model: {self.__model}\nYear: {self.__year}\nPrice: {self.__price}\nSN: {self.__sn}\nRental state: {self.__isRented}'
+    @property
+    def model(self):
+        return self._model
 
-    def getModel(self) -> str:
-        return self.__model
+    @property
+    def year(self):
+        return self._year
 
-    def getYear(self) -> int:
-        return self.__year
+    @property
+    def price(self):
+        return self._price
 
-    def getPrice(self) -> int:
-        return self.__price
-
-    def setPrice(self, price):
-        if price <= 0:
+    @price.setter
+    def price(self, value):
+        if value <= 0:
             raise Exception("Price of bike cannot be negative.")
-        self.__price = price
+        self._price = value
 
-    def getSN(self) -> str:
-        return self.__dn
+    @property
+    def sn(self):
+        return self._serialnr
 
-    def getIsRented(self) -> bool:
-        return self.__isRented
+    @property
+    def isRented(self):
+        return self._isRented
 
-    def setIsRented(self, state: bool):
-        self.__isRented = state
+    @isRented.setter
+    def isRented(self, value: bool):
+        self._isRented = value
 
-    def getID(self) -> int:
-        return self.__id
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        if value < 0:
+            Exception("Bike ID cannot be less than 0")
+        self._id = value
