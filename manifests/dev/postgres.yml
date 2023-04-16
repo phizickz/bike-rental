@@ -17,8 +17,7 @@ data:
           model varchar(255) NOT NULL,
           year INT,
           price varchar(255),
-          serialnr varchar(255) NOT NULL,
-          isRented BOOLEAN NOT NULL
+          serialnr varchar(255) NOT NULL
       );
       CREATE TABLE customer(
         id SERIAL PRIMARY KEY,
@@ -30,9 +29,12 @@ data:
           id SERIAL PRIMARY KEY,
           start_date DATE NOT NULL,
           stop_date DATE NOT NULL,
-          isActive BOOLEAN NOT NULL,
           customer_id INT REFERENCES customer(id),
           bike_id INT REFERENCES bike(id)
+      );
+      CREATE TABLE activeRentals(
+          id SERIAL PRIMARY KEY,
+          rental_id INT REFERENCES rentals(id)
       );
     EOSQL
 ---

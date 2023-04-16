@@ -27,8 +27,8 @@ class pgclient:
 
 
     def addBike(self, value: Bike):
-        res = self.executeSQL(f"INSERT INTO bike (model,year,price,serialnr,isRented) "
-                              f"VAlUES('{value.model}','{value.year}','{value.price}','{value.sn}','{value.isRented}') "
+        res = self.executeSQL(f"INSERT INTO bike (model,year,price,serialnr) "
+                              f"VAlUES('{value.model}','{value.year}','{value.price}','{value.sn}') "
                               f"RETURNING id;")
         value.id = res[0][0]
 
@@ -48,13 +48,31 @@ class pgclient:
                               f"RETURNING id;")
         value.id = res[0][0]
 
-    def getRandomBikeID(self, amount=1, isRented=False) -> list:
-        res = self.executeSQL(f"SELECT id FROM bike WHERE isRented={isRented} ORDER BY RANDOM() LIMIT {amount};")
+    def getRandomBikeID(self, amount=1) -> list:
+        # Returns a bike ID that is not currently rented
+        # All honour to ChatGPT for query
+        res = self.executeSQL(f"SELECT id "
+                              f"FROM bike "
+                              f"WHERE id NOT IN ("
+                              f"SELECT bike_id "
+                              f"FROM rentals "
+                              f"INNER JOIN activeRentals ON activeRentals.rental_id = rentals.id"
+                              f") "
+                              f"ORDER BY RANDOM() LIMIT {amount};")
         return res
 
     def getRandomCustomerID(self, value=1) -> list:
         res = self.executeSQL(f"SELECT id FROM customer ORDER BY RANDOM() LIMIT {value};")
         return res
+
+    def getRandomCustomerIDWithRental(self):
+        res = self.executeSQL(f"SELECT rentals.customer_id"
+                              f"FROM rentals"
+                              f"INNER JOIN activeRentals ON rentals.id = activeRentals.rental_id"
+                              f"WHERE customer_id=("
+                              f"SELECT customer_id FROM rentals ORDER BY RANDOM() LIMIT 1;"
+                              f");")
+        return res[0]
 
     def rentBike(self, value: Rental):
         res = self.executeSQL(f"INSERT INTO rentals(start_date,stop_date,customer_id,bike_id) "
@@ -62,14 +80,18 @@ class pgclient:
                               f"RETURNING id;")
         if len(res) < 1:
             raise Exception("Something went wrong at rentBike.")
-
-        value.bike.isRented = True
-        res = self.executeSQL(f"UPDATE bike SET isRented = {value.bike.isRented} "
-                              f"WHERE id = {value.bike.id};")
+        res = self.executeSQL(f"INSERT INTO activeRentals(rental_id)"
+                              f"VALUES('{res[0][0]}')")
 
     def getRentals(self):
-        res = self.executeSQL("select * from rentals")
-        return res.fetchall()
+        res = self.executeSQL(f"select * from rentals")
+        return res
+
+    def getActiveRentalsForRandomCustomer(self):
+        res = self.executeSQL(f"SELECT rentals.customer_id"
+                              f"FROM rentals"
+                              f"INNER JOIN activeRentals ON rentals.id = activeRentals.rental_id;")
+        return res
 
     def executeSQL(self, sqlstring):
         try:

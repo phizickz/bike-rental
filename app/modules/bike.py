@@ -7,7 +7,6 @@ class Bike:
         self._year: int = year
         self._price = price
         self._serialnr: str = sn
-        self._isRented: bool = False
         self._id = -1
 
     @property
@@ -32,13 +31,6 @@ class Bike:
     def sn(self):
         return self._serialnr
 
-    @property
-    def isRented(self):
-        return self._isRented
-
-    @isRented.setter
-    def isRented(self, value: bool):
-        self._isRented = value
 
     @property
     def id(self):

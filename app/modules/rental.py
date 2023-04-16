@@ -1,25 +1,11 @@
 # Rent bike to customer
 ##
-import datetime
 
 from modules.bike import Bike
 from modules.customer import Customer
 
-class Date():
-    def __init__(self, date=datetime.__all__):
-        self._date = date
-
-    @property
-    def date(self):
-        return self._date
-
-    @date.setter
-    def date(self, value: datetime):
-        self._date = value
-
-
 class Rental():
-    def __init__(self,bikeid: int, customerid: int, startdate=Date().date,stopdate=Date()):
+    def __init__(self,bikeid: int, customerid: int, startdate,stopdate):
         self._bikeid=bikeid
         self._customerid = customerid
         self._startdate = startdate

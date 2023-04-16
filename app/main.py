@@ -1,6 +1,6 @@
 import os
 import random
-
+import datetime
 from modules.bike import Bike
 from modules.customer import Customer
 from modules.rental import Rental
@@ -46,27 +46,39 @@ def generateCustomers(numberOfCustomers: int):
         client.addCustomer(tempCustomer)
 
 def generateRentals(numberofRentals: int):
+    today = datetime.date.today()
     for r in range(numberofRentals):
         randbike = client.getRandomBikeID(random.randint(1,3))
         randcustomer = client.getRandomCustomerID()
+        stoptime = today + datetime.timedelta(days=r)
         for b in randbike:
             client.rentBike(
                 Rental(
                     bikeid=b[0],
-                    customerid=randcustomer[0][0]
+                    customerid=randcustomer[0][0],
+                    startdate=today.strftime('%Y-%m-%d'),
+                    stopdate=stoptime.strftime('%Y-%m-%d')
                 )
             )
+
+def generateTransactions(numberOfTransactions: int):
+    for t in range(numberOfTransactions):
+        customersRentals = client.getActiveRentalsForRandomCustomer()
+        print(customersRentals)
 
 if __name__ == '__main__':
     load_dotenv()
     client = pgclient()
     if os.getenv("PY_ENV") == "dev":
-        generateBikes(100)
-        generateCustomers(50)
-        generateRentals(10)
-        rentals = client.getRentals()
-        for r in rentals:
-            print(r)
+        testvalues = 20
+        generateBikes(testvalues * 10)
+        generateCustomers(testvalues * 5)
+        generateRentals(testvalues)
+        generateTransactions(int(testvalues / 2))
+
+        # rentals = client.getRentals()
+        # for r in rentals:
+        #     print(r)
         # create 20 fictional rentals
         # end half of rentals
         # list out current rentals
