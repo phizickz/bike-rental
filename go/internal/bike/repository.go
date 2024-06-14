@@ -1,14 +1,20 @@
 package bike
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 type Repository struct {
-	bikes map[int]*Bike
+	bikes  map[int]*Bike
+	nextID int
+	mu     sync.Mutex
 }
 
 func NewRepository() *Repository {
 	return &Repository{
-		bikes: make(map[int]*Bike),
+		bikes:  make(map[int]*Bike),
+		nextID: 1,
 	}
 }
 
@@ -21,9 +27,17 @@ func (r *Repository) FindBike(id int) (*Bike, error) {
 }
 
 func (r *Repository) SaveBike(bike *Bike) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	bike.ID = r.nextID
 	r.bikes[bike.ID] = bike
+	r.nextID++
 }
 
-func (r *Repository) GetHighestID() int {
-	return len(r.bikes)
+func (r *Repository) PrintBikes() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, bike := range r.bikes {
+		fmt.Println(bike)
+	}
 }

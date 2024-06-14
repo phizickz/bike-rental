@@ -3,12 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"go/internal/bike"
-	"go/internal/customer"
-	"go/internal/rental"
 	"os"
 	"strconv"
 	"strings"
+
+	"bike-rental/internal/bike"
+	"bike-rental/internal/customer"
+	"bike-rental/internal/rental"
 )
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 	customerRepo := customer.NewRepository()
 	rentalService := rental.NewService(bikeRepo, customerRepo)
 	reader := bufio.NewReader(os.Stdin)
-
+	SeedData(bikeRepo, customerRepo)
 	for {
 		PrintOptions()
 		input := GetUserInput(reader, "Choose an option: ")
@@ -31,15 +32,20 @@ func main() {
 		case "3":
 			registerCustomer(reader, customerRepo)
 		case "4":
+			registerBike(reader, bikeRepo)
+		case "5":
 			fmt.Println("Goodbye.")
 			return
+		case "9":
+			bikeRepo.PrintBikes()
+			customerRepo.PrintCustomers()
+			rentalService.PrintRentals()
 		default:
 			fmt.Println("Invalid option. Try again.")
 		}
 	}
 }
 
-// TODO add rentalrepository
 func rentBike(reader *bufio.Reader, rentalService *rental.Service) {
 	customerID, err := strconv.Atoi(GetUserInput(reader, "Enter customer ID: "))
 	if err != nil {
@@ -61,29 +67,35 @@ func rentBike(reader *bufio.Reader, rentalService *rental.Service) {
 	fmt.Println("Bike rented successfully.")
 }
 
-// TODO
 func returnBike(reader *bufio.Reader, rentalService *rental.Service) {
-	inputRentalID := GetUserInput(reader, "Enter rental ID: ")
+	inputRentalID, err := strconv.Atoi(GetUserInput(reader, "Enter rental ID: "))
+	if err != nil {
+		fmt.Errorf("Invalid rental ID.")
+		return
+	}
+
+	rentalService.ReturnBike(inputRentalID)
 }
 
 func registerCustomer(reader *bufio.Reader, customerRepo *customer.Repository) {
 	input := GetUserInput(reader, "New customer name: ")
-	id := customerRepo.GetHighestID
-	customerRepo.SaveCustomer(customer.NewCustomer(id, input))
-	fmt.Printf("User %v created.\n", id)
+	customerRepo.SaveCustomer(customer.NewCustomer(input))
+	fmt.Printf("User created.\n")
 }
 
-// TODO
-func registerBike() {
-
+func registerBike(reader *bufio.Reader, bikeRepo *bike.Repository) {
+	input := GetUserInput(reader, "New bike model: ")
+	bikeRepo.SaveBike(bike.NewBike(input))
 }
 
 func PrintOptions() {
-	fmt.Println("Welcome to the Bike Rental Shop.")
+	fmt.Println("\nWelcome to the Bike Rental Shop.\n")
 	fmt.Println("1. Rent a bike")
 	fmt.Println("2. Return a bike")
 	fmt.Println("3. Register a customer")
-	fmt.Println("4. Exit")
+	fmt.Println("4. Register a bike")
+	fmt.Println("5. Exit")
+	fmt.Println("9. Infodump")
 }
 
 func GetUserInput(reader *bufio.Reader, prompt string) string {
@@ -93,10 +105,10 @@ func GetUserInput(reader *bufio.Reader, prompt string) string {
 }
 
 func SeedData(bikeRepo *bike.Repository, customerRepo *customer.Repository) {
-	bikeRepo.SaveBike(bike.NewBike(bikeRepo.GetHighestID, "DBS"))
-	bikeRepo.SaveBike(bike.NewBike(bikeRepo.GetHighestID, "Merida"))
-	bikeRepo.SaveBike(bike.NewBike(bikeRepo.GetHighestID, "Zykkel"))
+	bikeRepo.SaveBike(bike.NewBike("DBS"))
+	bikeRepo.SaveBike(bike.NewBike("Merida"))
+	bikeRepo.SaveBike(bike.NewBike("Zykkel"))
 
-	customerRepo.SaveCustomer(customer.NewCustomer(customerRepo.GetHighestID, "Markus"))
-	customerRepo.SaveCustomer(customer.NewCustomer(customerRepo.GetHighestID, "Marte"))
+	customerRepo.SaveCustomer(customer.NewCustomer("Markus"))
+	customerRepo.SaveCustomer(customer.NewCustomer("Marte"))
 }

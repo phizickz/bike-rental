@@ -1,6 +1,9 @@
 package rental
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Rental struct {
 	ID         int
@@ -25,4 +28,8 @@ func (r *Rental) CompleteRental() {
 
 func (r *Rental) IsCompleted() bool {
 	return !r.EndTime.IsZero()
+}
+
+func (r *Rental) String() string {
+	return fmt.Sprintf("Rental ID: %d, bike ID: %d, customer ID: %d, Start time: %s", r.ID, r.BikeID, r.CustomerID, r.StartTime)
 }

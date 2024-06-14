@@ -2,8 +2,10 @@ package rental
 
 import (
 	"fmt"
-	"go/internal/bike"
-	"go/internal/customer"
+	"sync"
+
+	"bike-rental/internal/bike"
+	"bike-rental/internal/customer"
 )
 
 type Service struct {
@@ -11,6 +13,7 @@ type Service struct {
 	customerRepo *customer.Repository
 	rentals      map[int]*Rental
 	nextID       int
+	mu           sync.Mutex
 }
 
 func NewService(bikeRepo *bike.Repository, customerRepo *customer.Repository) *Service {
@@ -23,6 +26,8 @@ func NewService(bikeRepo *bike.Repository, customerRepo *customer.Repository) *S
 }
 
 func (s *Service) RentBike(customerID, bikeID int) (*Rental, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	bike, err := s.bikeRepo.FindBike(bikeID)
 	if err != nil {
 		return nil, err
@@ -30,9 +35,10 @@ func (s *Service) RentBike(customerID, bikeID int) (*Rental, error) {
 	if !bike.Available {
 		return nil, fmt.Errorf("Bike is not available.")
 	}
-
-	rental := NewRental(s.IncrementID(), bikeID, customerID)
+	id := s.nextID
+	rental := NewRental(id, bikeID, customerID)
 	s.rentals[rental.ID] = rental
+	s.nextID++
 	bike.Available = false
 	s.bikeRepo.SaveBike(bike)
 
@@ -62,8 +68,10 @@ func (s *Service) ReturnBike(rentalID int) error {
 	return nil
 }
 
-func (s *Service) IncrementID() int {
-	id := s.nextID
-	s.nextID++
-	return id
+func (s *Service) PrintRentals() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, rental := range s.rentals {
+		fmt.Println(rental)
+	}
 }

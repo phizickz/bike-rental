@@ -1,13 +1,18 @@
 package customer
 
+import "fmt"
+
 type Customer struct {
 	ID   int
 	Name string
 }
 
-func NewCustomer(id int, name string) *Customer {
+func NewCustomer(name string) *Customer {
 	return &Customer{
-		ID:   id,
 		Name: name,
 	}
+}
+
+func (c *Customer) String() string {
+	return fmt.Sprintf("Customer ID: %d, name: %s", c.ID, c.Name)
 }
