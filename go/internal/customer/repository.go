@@ -1,43 +1,40 @@
 package customer
 
 import (
-	"fmt"
-	"sync"
+	"gorm.io/gorm"
 )
 
 type Repository struct {
-	customers map[int]*Customer
-	mu        sync.Mutex
-	nextID    int
+	db *gorm.DB
+
 }
 
-func NewRepository() *Repository {
-	return &Repository{
-		customers: make(map[int]*Customer),
-		nextID:    1,
-	}
+func NewRepository(db *gorm.DB) *Repository {
+	return &Repository{db: db}
+
 }
 
 func (r *Repository) FindCustomer(id int) (*Customer, error) {
-	customer, exists := r.customers[id]
-	if !exists {
-		return nil, fmt.Errorf("Customer does not exist.")
+
+	var customer Customer
+	if err := r.db.First(&customer, id).Error; err != nil {
+		return nil, err
 	}
-	return customer, nil
+	return &customer, nil
 }
 
-func (r *Repository) SaveCustomer(customer *Customer) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	customer.ID = r.nextID
-	r.customers[customer.ID] = customer
-	r.nextID++
+func (r *Repository) CreateCustomer(customer *Customer) error {
+	return r.db.Create(customer).Error
 }
 
-func (r *Repository) PrintCustomers() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	for _, customer := range r.customers {
-		fmt.Println(customer)
+func (r *Repository) SaveCustomer(customer *Customer) error {
+	return r.db.Save(customer).Error
+}
+
+func (r *Repository) GetAllCustomers() ([]Customer, error) {
+	var customers []Customer
+	if err := r.db.Find(&customers).Error; err != nil {
+		return nil, err
 	}
+	return customers, nil
 }

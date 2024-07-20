@@ -3,47 +3,63 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
 	"bike-rental/internal/bike"
+	"bike-rental/internal/config"
 	"bike-rental/internal/customer"
 	"bike-rental/internal/rental"
 )
 
 func main() {
-	// config := config.LoadConfig()
+	config := config.LoadConfig()
 
-	bikeRepo := bike.NewRepository()
-	customerRepo := customer.NewRepository()
-	rentalService := rental.NewService(bikeRepo, customerRepo)
-	reader := bufio.NewReader(os.Stdin)
+	// Initialize database connection
+	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
+		config.DBHost, config.DBPort, config.DBUser, config.DBName, config.DBPassword)
+	db = database.db(dsn)
+	// db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	// if err != nil {
+	// 	log.Fatalf("Failed to connect to database: %v", err)
+	// }
+
+	bikeRepo := bike.NewRepository(db)
+	customerRepo := customer.NewRepository(db)
+	rentalRepo := rental.NewRepository(db)
+	// rentalService := rental.NewService(bikeRepo, customerRepo, rentalRepo)
+	// reader := bufio.NewReader(os.Stdin)
 	SeedData(bikeRepo, customerRepo)
-	for {
-		PrintOptions()
-		input := GetUserInput(reader, "Choose an option: ")
+	fmt.Println("Printing bikes")
+	fmt.Print(bikeRepo.GetAllBikes())
+	fmt.Println("Printing customers")
+	fmt.Print(customerRepo.GetAllCustomers())
+	fmt.Println("Printing rentals")
+	fmt.Print(rentalRepo.GetAllRentals())
+	// for {
+	// 	PrintOptions()
+	// 	input := GetUserInput(reader, "Choose an option: ")
 
-		switch input {
-		case "1":
-			rentBike(reader, rentalService)
-		case "2":
-			returnBike(reader, rentalService)
-		case "3":
-			registerCustomer(reader, customerRepo)
-		case "4":
-			registerBike(reader, bikeRepo)
-		case "5":
-			fmt.Println("Goodbye.")
-			return
-		case "9":
-			bikeRepo.PrintBikes()
-			customerRepo.PrintCustomers()
-			rentalService.PrintRentals()
-		default:
-			fmt.Println("Invalid option. Try again.")
-		}
-	}
+	// 	switch input {
+	// 	case "1":
+	// 		rentBike(reader, rentalService)
+	// 	case "2":
+	// 		returnBike(reader, rentalService)
+	// 	case "3":
+	// 		registerCustomer(reader, customerRepo)
+	// 	case "4":
+	// 		registerBike(reader, bikeRepo)
+	// 	case "5":
+	// 		fmt.Println("Goodbye.")
+	// 		return
+	// 	case "9":
+	// 		bikeRepo.PrintBikes()
+	// 		customerRepo.PrintCustomers()
+	// 		rentalService.PrintRentals()
+	// 	default:
+	// 		fmt.Println("Invalid option. Try again.")
+	// 	}
+	// }
 }
 
 func rentBike(reader *bufio.Reader, rentalService *rental.Service) {
@@ -89,7 +105,7 @@ func registerBike(reader *bufio.Reader, bikeRepo *bike.Repository) {
 }
 
 func PrintOptions() {
-	fmt.Println("\nWelcome to the Bike Rental Shop.\n")
+	fmt.Println("\nWelcome to the Bike Rental Shop.")
 	fmt.Println("1. Rent a bike")
 	fmt.Println("2. Return a bike")
 	fmt.Println("3. Register a customer")

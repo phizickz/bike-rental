@@ -1,43 +1,41 @@
 package bike
 
 import (
-	"fmt"
-	"sync"
+	"gorm.io/gorm"
 )
 
 type Repository struct {
-	bikes  map[int]*Bike
-	nextID int
-	mu     sync.Mutex
+	db *gorm.DB
+
 }
 
-func NewRepository() *Repository {
-	return &Repository{
-		bikes:  make(map[int]*Bike),
-		nextID: 1,
-	}
+func NewRepository(db *gorm.DB) *Repository {
+	return &Repository{db: db}
+
 }
 
 func (r *Repository) FindBike(id int) (*Bike, error) {
-	bike, exists := r.bikes[id]
-	if !exists {
-		return nil, fmt.Errorf("Bike not found.")
+	var bike Bike
+	if err := r.db.First(&bike, id).Error; err != nil {
+		return nil, err
 	}
-	return bike, nil
+	return &bike, nil
+
 }
 
-func (r *Repository) SaveBike(bike *Bike) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	bike.ID = r.nextID
-	r.bikes[bike.ID] = bike
-	r.nextID++
+func (r *Repository) SaveBike(bike *Bike) error {
+	return r.db.Save(bike).Error
+
 }
 
-func (r *Repository) PrintBikes() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	for _, bike := range r.bikes {
-		fmt.Println(bike)
+func (r *Repository) CreateBike(bike *Bike) error {
+	return r.db.Create(bike).Error
+}
+
+func (r *Repository) GetAllBikes() ([]Bike, error) {
+	var bikes []Bike
+	if err := r.db.Find(&bikes).Error; err != nil {
+		return nil, err
 	}
+	return bikes, nil
 }
